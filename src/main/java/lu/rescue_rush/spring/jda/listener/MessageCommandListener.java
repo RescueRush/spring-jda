@@ -34,9 +34,9 @@ public class MessageCommandListener extends ListenerAdapter {
 
 	@PostConstruct
 	public void init() {
-		discordSenderService.awaitJDAReady();
-
 		final Thread t = new Thread(() -> {
+			discordSenderService.awaitJDAReady();
+			
 			final Map<String, MessageCommandExecutor> beans = context.getBeansOfType(MessageCommandExecutor.class);
 			beans.values().stream().forEach(this::registerCommand);
 		});

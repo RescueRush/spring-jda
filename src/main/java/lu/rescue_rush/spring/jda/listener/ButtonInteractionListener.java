@@ -33,9 +33,9 @@ public class ButtonInteractionListener extends ListenerAdapter {
 
 	@PostConstruct
 	public void init() {
-		discordSenderService.awaitJDAReady();
-
 		final Thread t = new Thread(() -> {
+			discordSenderService.awaitJDAReady();
+			
 			final Map<String, ButtonInteractionExecutor> beans = context.getBeansOfType(ButtonInteractionExecutor.class);
 			beans.entrySet().forEach(e -> registerInteraction(e.getKey(), e.getValue()));
 		});

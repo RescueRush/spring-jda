@@ -37,6 +37,8 @@ public class SelectMenuListener extends ListenerAdapter {
 	@PostConstruct
 	public void init() {
 		final Thread t = new Thread(() -> {
+			discordSenderService.awaitJDAReady();
+			
 			final Map<String, DiscordMenuExecutor> beans = context.getBeansOfType(DiscordMenuExecutor.class);
 			beans.entrySet().forEach(e -> registerCommand(e.getKey(), e.getValue()));
 		});

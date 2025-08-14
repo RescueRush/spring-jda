@@ -33,9 +33,9 @@ public class ModalInteractionListener extends ListenerAdapter {
 
 	@PostConstruct
 	public void init() {
-		discordSenderService.awaitJDAReady();
-
 		final Thread t = new Thread(() -> {
+			discordSenderService.awaitJDAReady();
+			
 			final Map<String, ModalInteractionExecutor> beans = context.getBeansOfType(ModalInteractionExecutor.class);
 			beans.values().forEach(this::registerInteraction);
 		});
