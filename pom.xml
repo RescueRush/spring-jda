@@ -11,7 +11,7 @@
 
 	<groupId>lu.rescue_rush</groupId>
 	<artifactId>spring-jda</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.1</version>
 
 	<contributors>
 		<contributor>
