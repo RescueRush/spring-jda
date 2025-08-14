@@ -6,9 +6,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.logging.Logger;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
@@ -33,11 +31,6 @@ public class DiscordSenderService {
 
 	@Autowired
 	private ApplicationContext context;
-
-	@Autowired
-	@Lazy
-	@Qualifier("channelLogs")
-	private MessageChannel channelLogs;
 
 	private JDA jda;
 
@@ -73,7 +66,7 @@ public class DiscordSenderService {
 		final Thread t = new Thread(() -> {
 			LOGGER.info("Waiting for JDA to be ready...");
 
-			waitUntilReady();
+			awaitJDAReady();
 
 			LOGGER.info("Registering JDA listeners...");
 
@@ -87,61 +80,62 @@ public class DiscordSenderService {
 		t.start();
 	}
 
-	public void send(String message) {
-		waitUntilReady();
-		channelLogs.sendMessage(message).complete();
+	public void send(MessageChannel channel, String message) {
+		awaitJDAReady();
+		channel.sendMessage(message).complete();
 	}
 
-	public void send(MessageCreateData message) {
-		waitUntilReady();
-		channelLogs.sendMessage(message).complete();
+	public void send(MessageChannel channel, MessageCreateData message) {
+		awaitJDAReady();
+		channel.sendMessage(message).complete();
 	}
 
-	public void send(MessageEmbed embed) {
-		waitUntilReady();
-		channelLogs.sendMessageEmbeds(embed).complete();
+	public void send(MessageChannel channel, MessageEmbed embed) {
+		awaitJDAReady();
+		channel.sendMessageEmbeds(embed).complete();
 	}
 
-	public void sendEmbed(DiscordEmbed embed) {
+	public void sendEmbed(DiscordEmbed embed, MessageChannel channel) {
 		try {
-			waitUntilReady();
-			if (embed instanceof DiscordButtonMessage) {
-				channelLogs.sendMessageEmbeds(embed.build()).setActionRow(((DiscordButtonMessage) embed).buttons()).complete();
+			awaitJDAReady();
+			if (embed instanceof DiscordButtonMessage buttons) {
+				channel.sendMessageEmbeds(embed.build()).setActionRow(buttons.buttons()).complete();
 			} else {
-				channelLogs.sendMessageEmbeds(embed.build()).complete();
+				channel.sendMessageEmbeds(embed.build()).complete();
 			}
 		} catch (Exception e) {
 			throw new RuntimeException("Error when sending embed: " + embed.getClass().getName(), e);
 		}
 	}
 
-	public void sendMessage(DiscordMessage message) {
+	public void sendMessage(DiscordMessage message, MessageChannel channel) {
 		try {
-			if (message instanceof DiscordButtonMessage) {
-				channelLogs.sendMessage(message.body()).setActionRow(((DiscordButtonMessage) message).buttons()).complete();
+			awaitJDAReady();
+			if (message instanceof DiscordButtonMessage buttons) {
+				channel.sendMessage(message.body()).setActionRow(buttons.buttons()).complete();
 			} else {
-				channelLogs.sendMessage(message.body()).complete();
+				channel.sendMessage(message.body()).complete();
 			}
 		} catch (Exception e) {
 			throw new RuntimeException("Error when sending embed: " + message.getClass().getName(), e);
 		}
 	}
 
-	public void sendEmbed(String title, String contentTitle, String content, Color color) {
+	public void sendEmbed(MessageChannel channel, String title, String contentTitle, String content, Color color) {
 		final EmbedBuilder builder = new EmbedBuilder();
 		builder.setTitle(title);
 		builder.setColor(color);
 		builder.addField(new Field(contentTitle, content, true));
-		send(builder.build());
+		send(channel, builder.build());
 	}
 
-	public void sendEmbed(String title, Color color, Field... fields) {
+	public void sendEmbed(MessageChannel channel, String title, Color color, Field... fields) {
 		final EmbedBuilder builder = new EmbedBuilder();
 		builder.setTitle(title);
 		builder.setColor(color);
 		for (Field f : fields)
 			builder.addField(f);
-		send(builder.build());
+		send(channel, builder.build());
 	}
 
 	public void shutdown() throws InterruptedException {
@@ -149,7 +143,7 @@ public class DiscordSenderService {
 		jda.awaitShutdown();
 	}
 
-	public void waitUntilReady() {
+	public void awaitJDAReady() {
 		try {
 			lock.await();
 		} catch (InterruptedException e) {
@@ -158,6 +152,10 @@ public class DiscordSenderService {
 		}
 		if (startupError != null)
 			throw new IllegalStateException("JDA not ready", startupError);
+	}
+	
+	public boolean isReady() {
+		return lock.getCount() == 0 && startupError == null;
 	}
 
 }

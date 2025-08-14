@@ -1,0 +1,15 @@
+{
+	"username": "Rescue-Rush Backend",
+	"author": {
+		"name": "Rescue-Rush Backend",
+		"icon": "",
+		"url": ""
+	},
+	"token": "",
+	"server": {
+		"id": "",
+		"channels": {
+			"logs": ""
+		}
+	}
+}

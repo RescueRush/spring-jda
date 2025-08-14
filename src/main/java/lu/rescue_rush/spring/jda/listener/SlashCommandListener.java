@@ -36,7 +36,7 @@ public class SlashCommandListener extends ListenerAdapter {
 
 	@PostConstruct
 	public void init() {
-		discordSenderService.waitUntilReady();
+		discordSenderService.awaitJDAReady();
 
 		final Thread t = new Thread(() -> {
 			final Map<String, SlashCommandExecutor> beans = context.getBeansOfType(SlashCommandExecutor.class);
