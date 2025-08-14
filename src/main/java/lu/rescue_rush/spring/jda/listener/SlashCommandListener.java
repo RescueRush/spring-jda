@@ -40,8 +40,7 @@ public class SlashCommandListener extends ListenerAdapter {
 
 		final Thread t = new Thread(() -> {
 			final Map<String, SlashCommandExecutor> beans = context.getBeansOfType(SlashCommandExecutor.class);
-
-			beans.values().stream().forEach(this::registerCommand);
+			beans.entrySet().forEach(e -> registerCommand(e.getKey(), e.getValue()));
 		});
 		t.setName("SlashCommandListener-Init");
 		t.setDaemon(true);
@@ -92,11 +91,11 @@ public class SlashCommandListener extends ListenerAdapter {
 		}
 	}
 
-	public void registerCommand(SlashCommandExecutor command) {
-		listeners.put(command.id(), command);
+	public void registerCommand(String name, SlashCommandExecutor command) {
+		listeners.put(name, command);
 
-		jda.upsertCommand(command.build()).queue((c) -> {
-			LOGGER.info("Registered slash command: " + command.id() + " (" + command.description() + ")");
+		jda.upsertCommand(command.build(name)).queue((c) -> {
+			LOGGER.info("Registered slash command: " + name + " (" + command.description() + ")");
 		}, (e) -> {
 			if (e instanceof CancellationException)
 				return; // ignore

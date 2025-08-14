@@ -7,8 +7,6 @@ public sealed interface DiscordMenuExecutor<T extends GenericSelectMenuInteracti
 
 	void execute(T event);
 
-	String id();
-
 	default Object getArg(T event) {
 		return event.getComponentId().contains(":") ? event.getComponentId().split(":")[1] : null;
 	}

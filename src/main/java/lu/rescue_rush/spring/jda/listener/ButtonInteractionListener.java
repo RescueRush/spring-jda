@@ -37,7 +37,7 @@ public class ButtonInteractionListener extends ListenerAdapter {
 
 		final Thread t = new Thread(() -> {
 			final Map<String, ButtonInteractionExecutor> beans = context.getBeansOfType(ButtonInteractionExecutor.class);
-			beans.values().forEach(this::registerInteraction);
+			beans.entrySet().forEach(e -> registerInteraction(e.getKey(), e.getValue()));
 		});
 		t.setName("ButtonInteractionListener-Init");
 		t.setDaemon(true);
@@ -54,8 +54,10 @@ public class ButtonInteractionListener extends ListenerAdapter {
 		}
 	}
 
-	public void registerInteraction(ButtonInteractionExecutor interaction) {
-		listeners.put(interaction.id(), interaction);
+	public void registerInteraction(String name, ButtonInteractionExecutor interaction) {
+		listeners.put(name, interaction);
+
+		LOGGER.info("Registering button interaction: " + name);
 	}
 
 }

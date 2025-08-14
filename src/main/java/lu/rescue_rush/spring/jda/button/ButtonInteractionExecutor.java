@@ -6,6 +6,4 @@ public interface ButtonInteractionExecutor {
 
 	void execute(ButtonInteractionEvent event);
 
-	String id();
-
 }

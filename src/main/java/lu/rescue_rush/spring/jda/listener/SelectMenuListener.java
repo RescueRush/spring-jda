@@ -38,8 +38,7 @@ public class SelectMenuListener extends ListenerAdapter {
 	public void init() {
 		final Thread t = new Thread(() -> {
 			final Map<String, DiscordMenuExecutor> beans = context.getBeansOfType(DiscordMenuExecutor.class);
-
-			beans.values().stream().forEach(this::registerCommand);
+			beans.entrySet().forEach(e -> registerCommand(e.getKey(), e.getValue()));
 		});
 		t.setName("SelectMenuListener-Init");
 		t.setDaemon(true);
@@ -75,7 +74,7 @@ public class SelectMenuListener extends ListenerAdapter {
 		final String id = event.getComponentId().contains(":") ? event.getComponentId().split(":")[0] : event.getComponentId();
 		if (listeners.containsKey(id)) {
 			try {
-				DiscordMenuExecutor listener = listeners.get(id);
+				final DiscordMenuExecutor listener = listeners.get(id);
 				if (!(listener instanceof DiscordEntityMenuExecutor)) {
 					LOGGER.warning("Listener for '" + event.getComponentId() + "' isn't for Entity selection!");
 					event.getHook().sendMessage("Listener for '" + event.getComponentId() + "' isn't for Entity selection!");
@@ -94,10 +93,10 @@ public class SelectMenuListener extends ListenerAdapter {
 		}
 	}
 
-	public void registerCommand(DiscordMenuExecutor command) {
-		listeners.put(command.id(), command);
+	public void registerCommand(String name, DiscordMenuExecutor command) {
+		listeners.put(name, command);
 
-		LOGGER.info("Registering selection menu: " + command.id());
+		LOGGER.info("Registering selection menu: " + name);
 	}
 
 }

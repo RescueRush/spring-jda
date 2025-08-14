@@ -9,16 +9,14 @@ public interface SlashCommandExecutor {
 
 	void execute(SlashCommandInteractionEvent event);
 
-	String id();
-
 	String description();
 
 	default OptionData[] options() {
 		return new OptionData[0];
 	}
 
-	default SlashCommandData build() {
-		return Commands.slash(id(), description()).addOptions(options());
+	default SlashCommandData build(String name) {
+		return Commands.slash(name, description()).addOptions(options());
 	}
 
 }
