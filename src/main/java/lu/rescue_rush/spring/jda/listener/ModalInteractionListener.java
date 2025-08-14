@@ -37,7 +37,7 @@ public class ModalInteractionListener extends ListenerAdapter {
 			discordSenderService.awaitJDAReady();
 			
 			final Map<String, ModalInteractionExecutor> beans = context.getBeansOfType(ModalInteractionExecutor.class);
-			beans.values().forEach(this::registerInteraction);
+			beans.entrySet().forEach(e -> registerInteraction(e.getKey(), e.getValue()));
 		});
 		t.setName("ModalInteractionListener-Init");
 		t.setDaemon(true);
@@ -61,13 +61,14 @@ public class ModalInteractionListener extends ListenerAdapter {
 
 	private boolean hasModal(String modalId) {
 		return listeners.containsKey(modalId)
-				|| listeners.values().stream().anyMatch(list -> modalId.contains(":") ? modalId.split(":")[0].equals(list.name()) : false);
+				|| listeners.values().stream().anyMatch(list -> modalId.contains(":") ? modalId.split(":")[0].equals(list.getName()) : false);
 	}
 
-	public void registerInteraction(ModalInteractionExecutor interaction) {
-		listeners.put(interaction.name(), interaction);
+	public void registerInteraction(String name, ModalInteractionExecutor interaction) {
+		listeners.put(name, interaction);
+		interaction.setName(name);
 
-		LOGGER.info("Registered modal interaction: " + interaction.name());
+		LOGGER.info("Registered modal interaction: " + name);
 	}
 
 }
