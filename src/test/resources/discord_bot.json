@@ -1,15 +1,9 @@
 {
-	"username": "Rescue-Rush Backend",
+	"username": "Bot",
 	"author": {
-		"name": "Rescue-Rush Backend",
+		"name": "Bot",
 		"icon": "",
 		"url": ""
 	},
-	"token": "",
-	"server": {
-		"id": "",
-		"channels": {
-			"logs": ""
-		}
-	}
+	"token": ""
 }

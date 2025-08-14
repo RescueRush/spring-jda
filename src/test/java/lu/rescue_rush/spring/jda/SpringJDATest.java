@@ -2,13 +2,13 @@ package lu.rescue_rush.spring.jda;
 
 import java.util.logging.Logger;
 
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import jakarta.annotation.PostConstruct;
 import net.dv8tion.jda.api.JDA;
 
-@SpringBootTest
+@SpringBootTest(classes = SpringJDAMain.class)
 public class SpringJDATest {
 
 	private static final Logger LOGGER = Logger.getLogger(SpringJDATest.class.getName());
@@ -19,8 +19,8 @@ public class SpringJDATest {
 	@Autowired
 	private DiscordSenderService discordSenderService;
 	
-	@PostConstruct
-	private void init() {
+	@Test
+	public void init() {
 		if(discordSenderService.isReady()) {
 			LOGGER.info("JDA is already ready.");
 		}else {
