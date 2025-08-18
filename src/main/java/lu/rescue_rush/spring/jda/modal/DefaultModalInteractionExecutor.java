@@ -12,13 +12,13 @@ public abstract class DefaultModalInteractionExecutor implements ModalInteractio
 	}
 
 	@Override
-	public String getName() {
-		return name;
+	public void setBeanName(String name) {
+		this.name = name;
 	}
 
 	@Override
-	public void setName(String name) {
-		this.name = name;
+	public String getName() {
+		return name;
 	}
 
 }

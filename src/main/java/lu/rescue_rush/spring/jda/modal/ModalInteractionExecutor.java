@@ -3,12 +3,14 @@ package lu.rescue_rush.spring.jda.modal;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.BeanNameAware;
+
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.ItemComponent;
 import net.dv8tion.jda.api.interactions.modals.Modal;
 
-public interface ModalInteractionExecutor {
+public interface ModalInteractionExecutor extends BeanNameAware {
 
 	default Modal build(Object obj) {
 		return Modal.create(getName() + ":" + obj.toString(), title()).addComponents(rows()).build();
@@ -36,7 +38,5 @@ public interface ModalInteractionExecutor {
 	void execute(ModalInteractionEvent event);
 
 	String getName();
-
-	void setName(String name);
 
 }

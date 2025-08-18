@@ -66,7 +66,6 @@ public class ModalInteractionListener extends ListenerAdapter {
 
 	public void registerInteraction(String name, ModalInteractionExecutor interaction) {
 		listeners.put(name, interaction);
-		interaction.setName(name);
 
 		LOGGER.info("Registered modal interaction: " + name);
 	}
