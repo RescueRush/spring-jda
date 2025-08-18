@@ -47,7 +47,7 @@ public class ModalInteractionListener extends ListenerAdapter {
 	@Override
 	public void onModalInteraction(ModalInteractionEvent event) {
 		if (hasModal(event.getModalId())) {
-			LOGGER.info("Got modal interaction '" + event.getModalId() + "' from channel: " + event.getChannelId());
+			// LOGGER.info("Got modal interaction '" + event.getModalId() + "' from channel: " + event.getChannelId());
 			getListener(event.getModalId()).execute(event);
 		} else {
 			LOGGER.warning("No modal interaction registered for: " + event.getModalId());
