@@ -34,7 +34,7 @@ public class DiscordSenderService {
 	@Autowired
 	private ApplicationContext context;
 
-	private JDA jda;
+	protected JDA jda;
 
 	public DiscordSenderService(JDA jda) {
 		this.jda = jda;
