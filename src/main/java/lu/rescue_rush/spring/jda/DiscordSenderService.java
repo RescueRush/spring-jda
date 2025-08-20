@@ -1,6 +1,7 @@
 package lu.rescue_rush.spring.jda;
 
 import java.awt.Color;
+import java.time.Duration;
 import java.util.Collection;
 import java.util.concurrent.CountDownLatch;
 import java.util.logging.Logger;
@@ -10,6 +11,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import lu.rescue_rush.spring.jda.embed.DiscordButtonMessage;
 import lu.rescue_rush.spring.jda.embed.DiscordEmbed;
 import lu.rescue_rush.spring.jda.message.DiscordMessage;
@@ -95,7 +97,7 @@ public class DiscordSenderService {
 		channel.sendMessageEmbeds(embed).complete();
 	}
 
-	public void sendEmbed(DiscordEmbed embed, MessageChannel channel) {
+	public void sendEmbed(MessageChannel channel, DiscordEmbed embed) {
 		try {
 			awaitJDAReady();
 			if (embed instanceof DiscordButtonMessage buttons) {
@@ -108,7 +110,7 @@ public class DiscordSenderService {
 		}
 	}
 
-	public void sendMessage(DiscordMessage message, MessageChannel channel) {
+	public void sendMessage(MessageChannel channel, DiscordMessage message) {
 		try {
 			awaitJDAReady();
 			if (message instanceof DiscordButtonMessage buttons) {
@@ -138,9 +140,19 @@ public class DiscordSenderService {
 		send(channel, builder.build());
 	}
 
+	@PreDestroy
 	public void shutdown() throws InterruptedException {
 		LOGGER.info("JDA shutdown requested.");
-		jda.awaitShutdown();
+		if (!jda.awaitShutdown(Duration.ofSeconds(30))) {
+			jda.shutdownNow();
+			jda.awaitShutdown();
+		}
+	}
+
+	public void shutdownNow() {
+		LOGGER.info("Immediate JDA shutdown requested.");
+
+		jda.shutdownNow();
 	}
 
 	public void awaitJDAReady() {
@@ -153,7 +165,7 @@ public class DiscordSenderService {
 		if (startupError != null)
 			throw new IllegalStateException("JDA not ready", startupError);
 	}
-	
+
 	public boolean isReady() {
 		return lock.getCount() == 0 && startupError == null;
 	}
