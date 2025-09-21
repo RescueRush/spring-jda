@@ -14,6 +14,7 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lu.rescue_rush.spring.jda.embed.DiscordButtonMessage;
 import lu.rescue_rush.spring.jda.embed.DiscordEmbed;
+import lu.rescue_rush.spring.jda.listener.SlashCommandListener;
 import lu.rescue_rush.spring.jda.message.DiscordMessage;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
@@ -28,6 +29,9 @@ public class DiscordSenderService {
 
 	private static final Logger LOGGER = Logger.getLogger(DiscordSenderService.class.getName());
 
+	public static final String DEBUG_PROPERTY = DiscordSenderService.class.getSimpleName() + ".debug";
+	public static boolean DEBUG = Boolean.getBoolean(DEBUG_PROPERTY);
+	
 	private final CountDownLatch lock = new CountDownLatch(1);
 	private Throwable startupError = null;
 

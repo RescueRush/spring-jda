@@ -23,6 +23,9 @@ public class SlashCommandListener extends ListenerAdapter {
 
 	private static final Logger LOGGER = Logger.getLogger(SlashCommandListener.class.getName());
 
+	public static final String DEBUG_PROPERTY = SlashCommandListener.class.getSimpleName() + ".debug";
+	public static boolean DEBUG = Boolean.getBoolean(DEBUG_PROPERTY);
+
 	@Autowired
 	private ApplicationContext context;
 
@@ -36,6 +39,8 @@ public class SlashCommandListener extends ListenerAdapter {
 
 	@PostConstruct
 	public void init() {
+		DEBUG = DEBUG || DiscordSenderService.DEBUG;
+
 		final Thread t = new Thread(() -> {
 			discordSenderService.awaitJDAReady();
 
@@ -51,13 +56,19 @@ public class SlashCommandListener extends ListenerAdapter {
 	public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
 		if (listeners.containsKey(event.getName())) {
 			try {
+				if (event.isAcknowledged()) {
+					if (DEBUG)
+						LOGGER.info("Execution interaction already acknowledged for: " + event.getName());
+					return;
+				}
 				listeners.get(event.getName()).execute(event);
 			} catch (Exception e) {
-				final String msg = "A method executor (`" + event.getName() + "`) raised an exception: " + e.getMessage() + " ("
-						+ e.getClass().getSimpleName() + ")";
+				final String msg = "A method executor (`" + event.getName() + "`) raised an exception: "
+						+ e.getMessage() + " (" + e.getClass().getSimpleName() + ")";
 				event.getHook().sendMessage(msg).queue(null, (f) -> event.getChannel().sendMessage(msg).queue());
 
-				e.printStackTrace();
+				if (DEBUG)
+					e.printStackTrace();
 			}
 		} else {
 			LOGGER.warning("No slash command registered for: " + event.getName());
@@ -71,37 +82,44 @@ public class SlashCommandListener extends ListenerAdapter {
 
 			if (listener instanceof SlashCommandAutocomplete autocompleteListener) {
 				try {
+					if (event.isAcknowledged()) {
+						if (DEBUG)
+							LOGGER.info("Auto-complete interaction already acknowledged for: " + event.getName() + " ("
+									+ event.getFocusedOption().getName() + ")");
+						return;
+					}
 					autocompleteListener.complete(event);
 				} catch (Exception e) {
-					event
-							.getChannel()
-							.sendMessage("A method completer (`" + event.getName() + "`) raised an exception: " + e.getMessage() + " ("
-									+ e.getClass().getSimpleName() + ")")
+					event.getChannel().sendMessage("A method completer (`" + event.getName()
+							+ "`) raised an exception: " + e.getMessage() + " (" + e.getClass().getSimpleName() + ")")
 							.queue();
 
-					e.printStackTrace();
+					if (DEBUG)
+						e.printStackTrace();
 				}
 			} else {
-				LOGGER
-						.warning("No slash command autocomplete registered for: " + event.getName() + " ("
-								+ event.getFocusedOption().getName() + ")");
+				LOGGER.warning("No slash command autocomplete registered for: " + event.getName() + " ("
+						+ event.getFocusedOption().getName() + ")");
 			}
 		} else {
-			LOGGER.warning("No slash command registered for: " + event.getName() + " (" + event.getFocusedOption().getName() + ")");
+			LOGGER.warning("No slash command registered for: " + event.getName() + " ("
+					+ event.getFocusedOption().getName() + ")");
 		}
 	}
 
 	public void registerCommand(String name, SlashCommandExecutor command) {
 		listeners.put(name, command);
 
-		jda.upsertCommand(command.build(name)).queue((c) -> {
-			LOGGER.info("Registered slash command: " + name + " (" + command.description() + ")");
-		}, (e) -> {
-			if (e instanceof CancellationException)
-				return; // ignore
+		jda.upsertCommand(command.build(name)).queue(
+				(c) -> LOGGER.info("Registered slash command: " + name + " (" + command.description() + ")"), (e) -> {
+					if (e instanceof CancellationException) {
+						return; // ignore
+					}
 
-			e.printStackTrace();
-		});
+					if (DEBUG) {
+						e.printStackTrace();
+					}
+				});
 	}
 
 }
