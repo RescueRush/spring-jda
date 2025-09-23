@@ -3,11 +3,13 @@ package lu.rescue_rush.spring.jda;
 import java.awt.Color;
 import java.time.Duration;
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.logging.Logger;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
@@ -25,13 +27,14 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 
 @Service
+@ComponentScan(basePackageClasses = SlashCommandListener.class)
 public class DiscordSenderService {
 
 	private static final Logger LOGGER = Logger.getLogger(DiscordSenderService.class.getName());
 
 	public static final String DEBUG_PROPERTY = DiscordSenderService.class.getSimpleName() + ".debug";
 	public static boolean DEBUG = Boolean.getBoolean(DEBUG_PROPERTY);
-	
+
 	private final CountDownLatch lock = new CountDownLatch(1);
 	private Throwable startupError = null;
 
@@ -76,10 +79,14 @@ public class DiscordSenderService {
 
 			LOGGER.info("Registering JDA listeners...");
 
+			final long startTime = System.nanoTime();
 			final Collection<ListenerAdapter> las = context.getBeansOfType(ListenerAdapter.class).values();
+			final long startTime2 = System.nanoTime();
 			las.forEach(jda::addEventListener);
+			final long endTime = System.nanoTime();
 
-			LOGGER.info("Registered " + las.size() + " JDA listeners.");
+			LOGGER.info("Registered " + las.size() + " JDA listeners (" + ((endTime - startTime) / 1e9) + "s / "
+					+ ((endTime - startTime2) / 1e6) + "ms).");
 		});
 		t.setDaemon(true);
 		t.setName("jda-startup-listeners");
