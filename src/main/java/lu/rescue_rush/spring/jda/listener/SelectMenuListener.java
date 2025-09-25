@@ -28,8 +28,11 @@ public class SelectMenuListener extends ListenerAdapter {
 	@Autowired
 	private DiscordSenderService discordSenderService;
 
-	@Autowired
-	private Map<String, DiscordMenuExecutor> listeners;
+	private final Map<String, DiscordMenuExecutor> listeners;
+
+	public SelectMenuListener(Map<String, DiscordMenuExecutor> listeners) {
+		this.listeners = listeners;
+	}
 
 	@Async
 	@EventListener(ApplicationReadyEvent.class)

@@ -72,7 +72,7 @@ public class DiscordSenderService {
 
 	@Async
 	@EventListener(ApplicationReadyEvent.class)
-	private void init() {
+	public void init() {
 		LOGGER.info("Waiting for JDA to be ready...");
 
 		awaitJDAReady();

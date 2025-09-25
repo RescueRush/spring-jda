@@ -4,9 +4,11 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
-import jakarta.annotation.PostConstruct;
 import lu.rescue_rush.spring.jda.DiscordSenderService;
 import lu.rescue_rush.spring.jda.modal.ModalInteractionExecutor;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
@@ -23,10 +25,14 @@ public class ModalInteractionListener extends ListenerAdapter {
 	@Autowired
 	private DiscordSenderService discordSenderService;
 
-	@Autowired
-	private Map<String, ModalInteractionExecutor> listeners;
+	private final Map<String, ModalInteractionExecutor> listeners;
 
-	@PostConstruct
+	public ModalInteractionListener(Map<String, ModalInteractionExecutor> listeners) {
+		this.listeners = listeners;
+	}
+
+	@Async
+	@EventListener(ApplicationReadyEvent.class)
 	public void init() {
 		discordSenderService.awaitJDAReady();
 

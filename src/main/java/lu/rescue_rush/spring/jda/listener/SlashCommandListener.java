@@ -1,6 +1,5 @@
 package lu.rescue_rush.spring.jda.listener;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CancellationException;
 import java.util.logging.Logger;
@@ -33,7 +32,11 @@ public class SlashCommandListener extends ListenerAdapter {
 	@Autowired
 	private DiscordSenderService discordSenderService;
 
-	private Map<String, SlashCommandExecutor> listeners = new HashMap<>();
+	private final Map<String, SlashCommandExecutor> listeners;
+
+	public SlashCommandListener(Map<String, SlashCommandExecutor> listeners) {
+		this.listeners = listeners;
+	}
 
 	@Async
 	@EventListener(ApplicationReadyEvent.class)

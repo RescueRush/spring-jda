@@ -30,8 +30,11 @@ public class MessageCommandListener extends ListenerAdapter {
 	@Autowired
 	private DiscordSenderService discordSenderService;
 
-	@Autowired
-	private Map<String, MessageCommandExecutor> listeners;
+	private final Map<String, MessageCommandExecutor> listeners;
+
+	public MessageCommandListener(Map<String, MessageCommandExecutor> listeners) {
+		this.listeners = listeners;
+	}
 
 	@Async
 	@EventListener(ApplicationReadyEvent.class)

@@ -25,8 +25,11 @@ public class ButtonInteractionListener extends ListenerAdapter {
 	@Autowired
 	private DiscordSenderService discordSenderService;
 
-	@Autowired
-	private Map<String, ButtonInteractionExecutor> listeners;
+	private final Map<String, ButtonInteractionExecutor> listeners;
+
+	public ButtonInteractionListener(Map<String, ButtonInteractionExecutor> listeners) {
+		this.listeners = listeners;
+	}
 
 	@Async
 	@EventListener(ApplicationReadyEvent.class)
