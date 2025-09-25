@@ -1,17 +1,14 @@
 package lu.rescue_rush.spring.jda.listener;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import jakarta.annotation.PostConstruct;
 import lu.rescue_rush.spring.jda.DiscordSenderService;
 import lu.rescue_rush.spring.jda.modal.ModalInteractionExecutor;
-import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
@@ -20,35 +17,43 @@ public class ModalInteractionListener extends ListenerAdapter {
 
 	private static final Logger LOGGER = Logger.getLogger(ModalInteractionListener.class.getName());
 
-	@Autowired
-	private ApplicationContext context;
-
-	@Autowired
-	private JDA jda;
+	public static final String DEBUG_PROPERTY = ModalInteractionListener.class.getSimpleName() + ".debug";
+	public static boolean DEBUG = Boolean.getBoolean(DEBUG_PROPERTY);
 
 	@Autowired
 	private DiscordSenderService discordSenderService;
 
-	private Map<String, ModalInteractionExecutor> listeners = new HashMap<>();
+	@Autowired
+	private Map<String, ModalInteractionExecutor> listeners;
 
 	@PostConstruct
 	public void init() {
-		final Thread t = new Thread(() -> {
-			discordSenderService.awaitJDAReady();
-			
-			final Map<String, ModalInteractionExecutor> beans = context.getBeansOfType(ModalInteractionExecutor.class);
-			beans.entrySet().forEach(e -> registerInteraction(e.getKey(), e.getValue()));
-		});
-		t.setName("ModalInteractionListener-Init");
-		t.setDaemon(true);
-		t.start();
+		discordSenderService.awaitJDAReady();
+
+		listeners.entrySet().forEach(e -> LOGGER.info("Registered modal interaction: " + e.getKey()));
 	}
 
 	@Override
 	public void onModalInteraction(ModalInteractionEvent event) {
 		if (hasModal(event.getModalId())) {
-			// LOGGER.info("Got modal interaction '" + event.getModalId() + "' from channel: " + event.getChannelId());
-			getListener(event.getModalId()).execute(event);
+			try {
+				getListener(event.getModalId()).execute(event);
+			} catch (Exception e) {
+				final String msg = "A method executor (`" + event.getModalId() + "`) raised an exception: " + e.getMessage() + " ("
+						+ e.getClass().getSimpleName() + ")";
+				event
+						.getHook()
+						.sendMessage(msg)
+						.queue(null,
+								(f) -> event
+										.getChannel()
+										.sendMessage(msg + "\n(failed once: " + f.getMessage() + " (" + f.getClass().getSimpleName() + "))")
+										.queue());
+
+				if (isDebug()) {
+					e.printStackTrace();
+				}
+			}
 		} else {
 			LOGGER.warning("No modal interaction registered for: " + event.getModalId());
 		}
@@ -60,14 +65,14 @@ public class ModalInteractionListener extends ListenerAdapter {
 	}
 
 	private boolean hasModal(String modalId) {
-		return listeners.containsKey(modalId)
-				|| listeners.values().stream().anyMatch(list -> modalId.contains(":") ? modalId.split(":")[0].equals(list.getName()) : false);
+		return listeners.containsKey(modalId) || listeners
+				.values()
+				.stream()
+				.anyMatch(list -> modalId.contains(":") ? modalId.split(":")[0].equals(list.getName()) : false);
 	}
 
-	public void registerInteraction(String name, ModalInteractionExecutor interaction) {
-		listeners.put(name, interaction);
-
-		LOGGER.info("Registered modal interaction: " + name);
+	public static boolean isDebug() {
+		return DEBUG || DiscordSenderService.DEBUG;
 	}
 
 }

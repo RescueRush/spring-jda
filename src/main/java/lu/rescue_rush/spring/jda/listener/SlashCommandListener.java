@@ -6,10 +6,11 @@ import java.util.concurrent.CancellationException;
 import java.util.logging.Logger;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
-import jakarta.annotation.PostConstruct;
 import lu.rescue_rush.spring.jda.DiscordSenderService;
 import lu.rescue_rush.spring.jda.command.slash.SlashCommandAutocomplete;
 import lu.rescue_rush.spring.jda.command.slash.SlashCommandExecutor;
@@ -27,9 +28,6 @@ public class SlashCommandListener extends ListenerAdapter {
 	public static boolean DEBUG = Boolean.getBoolean(DEBUG_PROPERTY);
 
 	@Autowired
-	private ApplicationContext context;
-
-	@Autowired
 	private JDA jda;
 
 	@Autowired
@@ -37,19 +35,12 @@ public class SlashCommandListener extends ListenerAdapter {
 
 	private Map<String, SlashCommandExecutor> listeners = new HashMap<>();
 
-	@PostConstruct
+	@Async
+	@EventListener(ApplicationReadyEvent.class)
 	public void init() {
-		DEBUG = DEBUG || DiscordSenderService.DEBUG;
+		discordSenderService.awaitJDAReady();
 
-		final Thread t = new Thread(() -> {
-			discordSenderService.awaitJDAReady();
-
-			final Map<String, SlashCommandExecutor> beans = context.getBeansOfType(SlashCommandExecutor.class);
-			beans.entrySet().forEach(e -> registerCommand(e.getKey(), e.getValue()));
-		});
-		t.setName("SlashCommandListener-Init");
-		t.setDaemon(true);
-		t.start();
+		listeners.entrySet().forEach(e -> registerCommand(e.getKey(), e.getValue()));
 	}
 
 	@Override
@@ -57,18 +48,28 @@ public class SlashCommandListener extends ListenerAdapter {
 		if (listeners.containsKey(event.getName())) {
 			try {
 				if (event.isAcknowledged()) {
-					if (DEBUG)
+					if (DEBUG) {
 						LOGGER.info("Execution interaction already acknowledged for: " + event.getName());
+					}
 					return;
 				}
+
 				listeners.get(event.getName()).execute(event);
 			} catch (Exception e) {
-				final String msg = "A method executor (`" + event.getName() + "`) raised an exception: "
-						+ e.getMessage() + " (" + e.getClass().getSimpleName() + ")";
-				event.getHook().sendMessage(msg).queue(null, (f) -> event.getChannel().sendMessage(msg).queue());
+				final String msg = "A method executor (`" + event.getName() + "`) raised an exception: " + e.getMessage() + " ("
+						+ e.getClass().getSimpleName() + ")";
+				event
+						.getChannel()
+						.sendMessage(msg)
+						.queue(null,
+								(f) -> event
+										.getChannel()
+										.sendMessage(msg + "\n(failed once: " + f.getMessage() + " (" + f.getClass().getSimpleName() + "))")
+										.queue());
 
-				if (DEBUG)
+				if (DEBUG) {
 					e.printStackTrace();
+				}
 			}
 		} else {
 			LOGGER.warning("No slash command registered for: " + event.getName());
@@ -83,43 +84,58 @@ public class SlashCommandListener extends ListenerAdapter {
 			if (listener instanceof SlashCommandAutocomplete autocompleteListener) {
 				try {
 					if (event.isAcknowledged()) {
-						if (DEBUG)
-							LOGGER.info("Auto-complete interaction already acknowledged for: " + event.getName() + " ("
-									+ event.getFocusedOption().getName() + ")");
+						if (isDebug()) {
+							LOGGER
+									.info("Auto-complete interaction already acknowledged for: " + event.getName() + " ("
+											+ event.getFocusedOption().getName() + ")");
+						}
 						return;
 					}
+
 					autocompleteListener.complete(event);
 				} catch (Exception e) {
-					event.getChannel().sendMessage("A method completer (`" + event.getName()
-							+ "`) raised an exception: " + e.getMessage() + " (" + e.getClass().getSimpleName() + ")")
-							.queue();
+					final String msg = "A method completer (`" + event.getName() + "`) raised an exception: " + e.getMessage() + " ("
+							+ e.getClass().getSimpleName() + ")";
+					event
+							.getChannel()
+							.sendMessage(msg)
+							.queue(null,
+									(f) -> event
+											.getChannel()
+											.sendMessage(
+													msg + "\n(failed once: " + f.getMessage() + " (" + f.getClass().getSimpleName() + "))")
+											.queue());
 
-					if (DEBUG)
+					if (isDebug()) {
 						e.printStackTrace();
+					}
 				}
 			} else {
-				LOGGER.warning("No slash command autocomplete registered for: " + event.getName() + " ("
-						+ event.getFocusedOption().getName() + ")");
+				LOGGER
+						.warning("No slash command autocomplete registered for: " + event.getName() + " ("
+								+ event.getFocusedOption().getName() + ")");
 			}
 		} else {
-			LOGGER.warning("No slash command registered for: " + event.getName() + " ("
-					+ event.getFocusedOption().getName() + ")");
+			LOGGER.warning("No slash command registered for: " + event.getName() + " (" + event.getFocusedOption().getName() + ")");
 		}
 	}
 
 	public void registerCommand(String name, SlashCommandExecutor command) {
-		listeners.put(name, command);
-
-		jda.upsertCommand(command.build(name)).queue(
-				(c) -> LOGGER.info("Registered slash command: " + name + " (" + command.description() + ")"), (e) -> {
+		jda
+				.upsertCommand(command.build(name))
+				.queue((c) -> LOGGER.info("Registered slash command: " + name + " (" + command.description() + ")"), (e) -> {
 					if (e instanceof CancellationException) {
 						return; // ignore
 					}
 
-					if (DEBUG) {
+					if (isDebug()) {
 						e.printStackTrace();
 					}
 				});
+	}
+
+	public static boolean isDebug() {
+		return DEBUG || DiscordSenderService.DEBUG;
 	}
 
 }

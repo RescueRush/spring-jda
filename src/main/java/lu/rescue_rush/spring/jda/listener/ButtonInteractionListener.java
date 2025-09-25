@@ -1,17 +1,16 @@
 package lu.rescue_rush.spring.jda.listener;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
-import jakarta.annotation.PostConstruct;
 import lu.rescue_rush.spring.jda.DiscordSenderService;
 import lu.rescue_rush.spring.jda.button.ButtonInteractionExecutor;
-import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
@@ -20,28 +19,21 @@ public class ButtonInteractionListener extends ListenerAdapter {
 
 	private static final Logger LOGGER = Logger.getLogger(ButtonInteractionListener.class.getName());
 
-	@Autowired
-	private ApplicationContext context;
-	
-	@Autowired
-	private JDA jda;
+	public static final String DEBUG_PROPERTY = ButtonInteractionListener.class.getSimpleName() + ".debug";
+	public static boolean DEBUG = Boolean.getBoolean(DEBUG_PROPERTY);
 
 	@Autowired
 	private DiscordSenderService discordSenderService;
 
-	private Map<String, ButtonInteractionExecutor> listeners = new HashMap<>();
+	@Autowired
+	private Map<String, ButtonInteractionExecutor> listeners;
 
-	@PostConstruct
+	@Async
+	@EventListener(ApplicationReadyEvent.class)
 	public void init() {
-		final Thread t = new Thread(() -> {
-			discordSenderService.awaitJDAReady();
-			
-			final Map<String, ButtonInteractionExecutor> beans = context.getBeansOfType(ButtonInteractionExecutor.class);
-			beans.entrySet().forEach(e -> registerInteraction(e.getKey(), e.getValue()));
-		});
-		t.setName("ButtonInteractionListener-Init");
-		t.setDaemon(true);
-		t.start();
+		discordSenderService.awaitJDAReady();
+
+		listeners.entrySet().forEach(e -> LOGGER.info("Registering button interaction: " + e.getKey()));
 	}
 
 	@Override
@@ -54,10 +46,8 @@ public class ButtonInteractionListener extends ListenerAdapter {
 		}
 	}
 
-	public void registerInteraction(String name, ButtonInteractionExecutor interaction) {
-		listeners.put(name, interaction);
-
-		LOGGER.info("Registering button interaction: " + name);
+	public static boolean isDebug() {
+		return DEBUG || DiscordSenderService.DEBUG;
 	}
 
 }

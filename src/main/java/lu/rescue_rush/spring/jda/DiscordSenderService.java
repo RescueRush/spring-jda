@@ -3,16 +3,17 @@ package lu.rescue_rush.spring.jda;
 import java.awt.Color;
 import java.time.Duration;
 import java.util.Collection;
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.logging.Logger;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lu.rescue_rush.spring.jda.embed.DiscordButtonMessage;
 import lu.rescue_rush.spring.jda.embed.DiscordEmbed;
@@ -69,28 +70,24 @@ public class DiscordSenderService {
 		t.start();
 	}
 
-	@PostConstruct
+	@Async
+	@EventListener(ApplicationReadyEvent.class)
 	private void init() {
-		// init all listeners
-		final Thread t = new Thread(() -> {
-			LOGGER.info("Waiting for JDA to be ready...");
+		LOGGER.info("Waiting for JDA to be ready...");
 
-			awaitJDAReady();
+		awaitJDAReady();
 
-			LOGGER.info("Registering JDA listeners...");
+		LOGGER.info("Registering JDA listeners...");
 
-			final long startTime = System.nanoTime();
-			final Collection<ListenerAdapter> las = context.getBeansOfType(ListenerAdapter.class).values();
-			final long startTime2 = System.nanoTime();
-			las.forEach(jda::addEventListener);
-			final long endTime = System.nanoTime();
+		final long startTime = System.nanoTime();
+		final Collection<ListenerAdapter> las = context.getBeansOfType(ListenerAdapter.class).values();
+		final long startTime2 = System.nanoTime();
+		las.forEach(jda::addEventListener);
+		final long endTime = System.nanoTime();
 
-			LOGGER.info("Registered " + las.size() + " JDA listeners (" + ((endTime - startTime) / 1e9) + "s / "
-					+ ((endTime - startTime2) / 1e6) + "ms).");
-		});
-		t.setDaemon(true);
-		t.setName("jda-startup-listeners");
-		t.start();
+		LOGGER
+				.info("Registered " + las.size() + " JDA listeners (" + ((endTime - startTime) / 1e9) + "s / "
+						+ ((endTime - startTime2) / 1e6) + "ms).");
 	}
 
 	public void send(MessageChannel channel, String message) {

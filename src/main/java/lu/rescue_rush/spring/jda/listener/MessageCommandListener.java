@@ -1,15 +1,15 @@
 package lu.rescue_rush.spring.jda.listener;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CancellationException;
 import java.util.logging.Logger;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
-import jakarta.annotation.PostConstruct;
 import lu.rescue_rush.spring.jda.DiscordSenderService;
 import lu.rescue_rush.spring.jda.command.message.MessageCommandExecutor;
 import net.dv8tion.jda.api.JDA;
@@ -21,8 +21,8 @@ public class MessageCommandListener extends ListenerAdapter {
 
 	private static final Logger LOGGER = Logger.getLogger(MessageCommandListener.class.getName());
 
-	@Autowired
-	private ApplicationContext context;
+	public static final String DEBUG_PROPERTY = MessageCommandListener.class.getSimpleName() + ".debug";
+	public static boolean DEBUG = Boolean.getBoolean(DEBUG_PROPERTY);
 
 	@Autowired
 	private JDA jda;
@@ -30,19 +30,15 @@ public class MessageCommandListener extends ListenerAdapter {
 	@Autowired
 	private DiscordSenderService discordSenderService;
 
-	private Map<String, MessageCommandExecutor> listeners = new HashMap<>();
+	@Autowired
+	private Map<String, MessageCommandExecutor> listeners;
 
-	@PostConstruct
+	@Async
+	@EventListener(ApplicationReadyEvent.class)
 	public void init() {
-		final Thread t = new Thread(() -> {
-			discordSenderService.awaitJDAReady();
-			
-			final Map<String, MessageCommandExecutor> beans = context.getBeansOfType(MessageCommandExecutor.class);
-			beans.values().stream().forEach(this::registerCommand);
-		});
-		t.setName("MessageCommandListener-Init");
-		t.setDaemon(true);
-		t.start();
+		discordSenderService.awaitJDAReady();
+
+		listeners.values().stream().forEach(this::registerCommand);
 	}
 
 	@Override
@@ -53,9 +49,18 @@ public class MessageCommandListener extends ListenerAdapter {
 			} catch (Exception e) {
 				final String msg = "A method executor (`" + event.getName() + "`) raised an exception: " + e.getMessage() + " ("
 						+ e.getClass().getSimpleName() + ")";
-				event.getHook().sendMessage(msg).queue(null, (f) -> event.getChannel().sendMessage(msg).queue());
+				event
+						.getHook()
+						.sendMessage(msg)
+						.queue(null,
+								(f) -> event
+										.getChannel()
+										.sendMessage(msg + "\n(failed once: " + f.getMessage() + " (" + f.getClass().getSimpleName() + "))")
+										.queue());
 
-				e.printStackTrace();
+				if (isDebug()) {
+					e.printStackTrace();
+				}
 			}
 		} else {
 			LOGGER.warning("No command command registered for: " + event.getName());
@@ -71,9 +76,14 @@ public class MessageCommandListener extends ListenerAdapter {
 			if (e instanceof CancellationException)
 				return; // ignore
 
-			// LOGGER.info("Exception while registering command command: " + command.name() + ": " + PCUtils.getRootCauseMessage(e));
+			// LOGGER.info("Exception while registering command command: " + command.name() + ": " +
+			// PCUtils.getRootCauseMessage(e));
 			e.printStackTrace();
 		});
+	}
+
+	public static boolean isDebug() {
+		return DEBUG || DiscordSenderService.DEBUG;
 	}
 
 }
