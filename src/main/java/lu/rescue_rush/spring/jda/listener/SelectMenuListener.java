@@ -4,9 +4,11 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
-import jakarta.annotation.PostConstruct;
 import lu.rescue_rush.spring.jda.DiscordSenderService;
 import lu.rescue_rush.spring.jda.menu.DiscordEntityMenuExecutor;
 import lu.rescue_rush.spring.jda.menu.DiscordMenuExecutor;
@@ -29,7 +31,8 @@ public class SelectMenuListener extends ListenerAdapter {
 	@Autowired
 	private Map<String, DiscordMenuExecutor> listeners;
 
-	@PostConstruct
+	@Async
+	@EventListener(ApplicationReadyEvent.class)
 	public void init() {
 		discordSenderService.awaitJDAReady();
 
@@ -47,7 +50,7 @@ public class SelectMenuListener extends ListenerAdapter {
 					event.getHook().sendMessage("Listener for '" + event.getComponentId() + "' isn't for String selection!");
 					return;
 				}
-				
+
 				((DiscordStringMenuExecutor) listener).execute(event);
 			} catch (Exception e) {
 				final String msg = "A method executor (`" + event.getComponentId() + "`) raised an exception: " + e.getMessage() + " ("
