@@ -92,135 +92,62 @@ public class DiscordSenderService {
 						+ ((endTime - startTime2) / 1e6) + "ms).");
 	}
 
-	public void send(MessageChannel channel, String message) {
+	public Message send(MessageChannel channel, String message) {
 		awaitJDAReady();
-		channel.sendMessage(message).complete();
+		return channel.sendMessage(message).complete();
 	}
 
-	public void send(MessageChannel channel, MessageCreateData message) {
+	public Message send(MessageChannel channel, MessageCreateData message) {
 		awaitJDAReady();
-		channel.sendMessage(message).complete();
+		return channel.sendMessage(message).complete();
 	}
 
-	public void send(MessageChannel channel, MessageEmbed embed) {
+	public Message send(MessageChannel channel, MessageEmbed embed) {
 		awaitJDAReady();
-		channel.sendMessageEmbeds(embed).complete();
+		return channel.sendMessageEmbeds(embed).complete();
 	}
 
-	public void sendEmbed(MessageChannel channel, DiscordEmbed embed) {
+	public Message sendEmbed(MessageChannel channel, DiscordEmbed embed) {
 		try {
 			awaitJDAReady();
 			if (embed instanceof DiscordButtonMessage buttons) {
-				channel.sendMessageEmbeds(embed.build()).setActionRow(buttons.buttons()).complete();
+				return channel.sendMessageEmbeds(embed.build()).setActionRow(buttons.buttons()).complete();
 			} else {
-				channel.sendMessageEmbeds(embed.build()).complete();
+				return channel.sendMessageEmbeds(embed.build()).complete();
 			}
 		} catch (Exception e) {
 			throw new RuntimeException("Error when sending embed: " + embed.getClass().getName(), e);
 		}
 	}
 
-	public void sendMessage(MessageChannel channel, DiscordMessage message) {
+	public Message sendMessage(MessageChannel channel, DiscordMessage message) {
 		try {
 			awaitJDAReady();
 			if (message instanceof DiscordButtonMessage buttons) {
-				channel.sendMessage(message.body()).setActionRow(buttons.buttons()).complete();
+				return channel.sendMessage(message.body()).setActionRow(buttons.buttons()).complete();
 			} else {
-				channel.sendMessage(message.body()).complete();
+				return channel.sendMessage(message.body()).complete();
 			}
 		} catch (Exception e) {
 			throw new RuntimeException("Error when sending embed: " + message.getClass().getName(), e);
 		}
 	}
 
-	public void sendEmbed(MessageChannel channel, String title, String contentTitle, String content, Color color) {
+	public Message sendEmbed(MessageChannel channel, String title, String contentTitle, String content, Color color) {
 		final EmbedBuilder builder = new EmbedBuilder();
 		builder.setTitle(title);
 		builder.setColor(color);
 		builder.addField(new Field(contentTitle, content, true));
-		send(channel, builder.build());
+		return send(channel, builder.build());
 	}
 
-	public void sendEmbed(MessageChannel channel, String title, Color color, Field... fields) {
+	public Message sendEmbed(MessageChannel channel, String title, Color color, Field... fields) {
 		final EmbedBuilder builder = new EmbedBuilder();
 		builder.setTitle(title);
 		builder.setColor(color);
 		for (Field f : fields)
 			builder.addField(f);
-		send(channel, builder.build());
-	}
-
-	// --
-
-	public CompletableFuture<Message> sendAsync(MessageChannel channel, String message) {
-		return CompletableFuture.supplyAsync(() -> {
-			awaitJDAReady();
-			return channel.sendMessage(message).submit().join();
-		});
-	}
-
-	public CompletableFuture<Message> sendAsync(MessageChannel channel, MessageCreateData message) {
-		return CompletableFuture.supplyAsync(() -> {
-			awaitJDAReady();
-			return channel.sendMessage(message).submit().join();
-		});
-	}
-
-	public CompletableFuture<Message> sendAsync(MessageChannel channel, MessageEmbed embed) {
-		return CompletableFuture.supplyAsync(() -> {
-			awaitJDAReady();
-			return channel.sendMessageEmbeds(embed).submit().join();
-		});
-	}
-
-	public CompletableFuture<Message> sendEmbedAsync(MessageChannel channel, DiscordEmbed embed) {
-		return CompletableFuture.supplyAsync(() -> {
-			awaitJDAReady();
-			try {
-				if (embed instanceof DiscordButtonMessage buttons) {
-					return channel.sendMessageEmbeds(embed.build()).setActionRow(buttons.buttons()).submit().join();
-				}
-				return channel.sendMessageEmbeds(embed.build()).submit().join();
-			} catch (Exception e) {
-				throw new RuntimeException("Error when sending embed: " + embed.getClass().getName(), e);
-			}
-		});
-	}
-
-	public CompletableFuture<Message> sendMessageAsync(MessageChannel channel, DiscordMessage message) {
-		return CompletableFuture.supplyAsync(() -> {
-			awaitJDAReady();
-			try {
-				if (message instanceof DiscordButtonMessage buttons) {
-					return channel.sendMessage(message.body()).setActionRow(buttons.buttons()).submit().join();
-				}
-				return channel.sendMessage(message.body()).submit().join();
-			} catch (Exception e) {
-				throw new RuntimeException("Error when sending message: " + message.getClass().getName(), e);
-			}
-		});
-	}
-
-	public CompletableFuture<Message> sendEmbedAsync(
-			MessageChannel channel,
-			String title,
-			String contentTitle,
-			String content,
-			Color color) {
-		final EmbedBuilder builder = new EmbedBuilder();
-		builder.setTitle(title);
-		builder.setColor(color);
-		builder.addField(new MessageEmbed.Field(contentTitle, content, true));
-		return sendAsync(channel, builder.build());
-	}
-
-	public CompletableFuture<Message> sendEmbedAsync(MessageChannel channel, String title, Color color, MessageEmbed.Field... fields) {
-		final EmbedBuilder builder = new EmbedBuilder();
-		builder.setTitle(title);
-		builder.setColor(color);
-		for (MessageEmbed.Field f : fields)
-			builder.addField(f);
-		return sendAsync(channel, builder.build());
+		return send(channel, builder.build());
 	}
 
 	@PreDestroy
