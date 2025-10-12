@@ -239,18 +239,38 @@ public class DiscordSenderService {
 	}
 
 	public void awaitJDAReady() {
+		if (isReady()) {
+			if (isDebug()) {
+				LOGGER.info("Skipping wait for " + Thread.currentThread().getName());
+			}
+			if (startupError != null) {
+				throw new IllegalStateException("JDA not ready", startupError);
+			}
+			return;
+		}
 		try {
+			if (isDebug()) {
+				LOGGER.info(Thread.currentThread().getName() + " is waiting on JDA");
+			}
 			lock.await();
+			if (isDebug()) {
+				LOGGER.info(Thread.currentThread().getName() + " got released from waiting on JDA");
+			}
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
 			throw new IllegalStateException("Interrupted while waiting for JDA to be ready.");
 		}
-		if (startupError != null)
+		if (startupError != null) {
 			throw new IllegalStateException("JDA not ready", startupError);
+		}
 	}
 
 	public boolean isReady() {
 		return lock.getCount() == 0 && startupError == null;
+	}
+
+	public static boolean isDebug() {
+		return DEBUG;
 	}
 
 }
