@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 
-import lu.pcy113.pclib.config.ConfigLoader;
+import lu.kbra.pclib.config.ConfigLoader;
 
 @Configuration
 public class DiscordBotConfiguration {

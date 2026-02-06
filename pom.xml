@@ -68,9 +68,9 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>lu.pcy113</groupId>
-			<artifactId>PCLib</artifactId>
-			<version>0.9.6</version>
+			<groupId>lu.kbra</groupId>
+			<artifactId>pclib-json</artifactId>
+			<version>[1.0.0,)</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>

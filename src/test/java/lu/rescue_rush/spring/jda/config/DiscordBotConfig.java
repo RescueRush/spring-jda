@@ -1,7 +1,7 @@
 package lu.rescue_rush.spring.jda.config;
 
-import lu.pcy113.pclib.config.ConfigLoader.ConfigContainer;
-import lu.pcy113.pclib.config.ConfigLoader.ConfigProp;
+import lu.kbra.pclib.config.ConfigLoader.ConfigContainer;
+import lu.kbra.pclib.config.ConfigLoader.ConfigProp;
 
 public class DiscordBotConfig implements ConfigContainer {
 
