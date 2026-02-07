@@ -3,9 +3,25 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>lu.rescue_rush</groupId>
+	<groupId>lu.rescue-rush</groupId>
 	<artifactId>spring-jda</artifactId>
-	<version>0.1</version>
+	<version>${revision}</version>
+
+	<name>Spring JDA</name>
+	<description>Spring JDA (Java Discord API) Integration</description>
+	<url>https://github.com/RescueRush/spring-jda</url>
+
+	<properties>
+		<revision>0.1</revision>
+		<java.version>17</java.version>
+		<maven.compiler.source>${java.version}</maven.compiler.source>
+		<maven.compiler.target>${java.version}</maven.compiler.target>
+		<spring-framework.version>7.0.2</spring-framework.version>
+		<spring-boot.version>3.5.4</spring-boot.version>
+		<jda.version>5.3.0</jda.version>
+		<jakarta.version>2.1.1</jakarta.version>
+		<pclib.version>1.0.0</pclib.version>
+	</properties>
 
 	<contributors>
 		<contributor>
@@ -22,55 +38,68 @@
 		</license>
 	</licenses>
 
-	<name>Spring JDA</name>
-	<description>Spring JDA (Java Discord API) Integration</description>
-	<url>https://github.com/RescueRush/spring-jda</url>
+	<scm>
+		<connection>scm:git:git@github.com:RescueRush/spring-jda.git</connection>
+		<developerConnection>scm:git:git@github.com:RescueRush/spring-jda.git</developerConnection>
+	</scm>
 
-	<properties>
-		<java.version>17</java.version>
-		<maven.compiler.source>${java.version}</maven.compiler.source>
-		<maven.compiler.target>${java.version}</maven.compiler.target>
-	</properties>
+	<distributionManagement>
+		<repository>
+			<id>nexus.rescue-rush.lu-releases</id>
+			<url>https://nexus.rescue-rush.lu/repository/maven-releases/</url>
+		</repository>
+		<snapshotRepository>
+			<id>nexus.rescue-rush.lu-snapshots</id>
+			<url>https://nexus.rescue-rush.lu/repository/maven-snapshots/</url>
+		</snapshotRepository>
+	</distributionManagement>
+
+	<repositories>
+		<repository>
+			<id>nexus.kbra.lu-releases</id>
+			<url>https://nexus.kbra.lu/repository/maven-releases/</url>
+		</repository>
+	</repositories>
 
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-beans</artifactId>
-			<version>6.2.9</version>
+			<version>${spring-framework.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-context</artifactId>
-			<version>6.2.9</version>
+			<version>${spring-framework.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-autoconfigure</artifactId>
-			<version>3.5.4</version>
+			<version>${spring-boot.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>jakarta.annotation</groupId>
 			<artifactId>jakarta.annotation-api</artifactId>
-			<version>2.1.1</version>
+			<version>${jakarta.version}</version>
 		</dependency>
 
 		<dependency>
 			<groupId>net.dv8tion</groupId>
 			<artifactId>JDA</artifactId>
-			<version>5.3.0</version>
+			<version>${jda.version}</version>
 		</dependency>
 
 		<!-- TESTS -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
-			<version>3.5.4</version>
+			<version>${spring-boot.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>lu.kbra</groupId>
 			<artifactId>pclib-json</artifactId>
-			<version>[1.0.0,)</version>
+			<version>${pclib.version}</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
@@ -87,6 +116,5 @@
 			</plugin>
 		</plugins>
 	</build>
-
 
 </project>
