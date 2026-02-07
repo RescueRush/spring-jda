@@ -41,6 +41,8 @@
 	<scm>
 		<connection>scm:git:git@github.com:RescueRush/spring-jda.git</connection>
 		<developerConnection>scm:git:git@github.com:RescueRush/spring-jda.git</developerConnection>
+		<url>https://github.com/RescueRush/spring-jda</url>
+		<tag>HEAD</tag>
 	</scm>
 
 	<distributionManagement>
