@@ -1,11 +1,10 @@
 package lu.rescue_rush.spring.jda.menu;
 
-import org.springframework.beans.factory.BeanNameAware;
-
 import net.dv8tion.jda.api.interactions.components.selections.EntitySelectMenu;
 
-public non-sealed interface DiscordEntityMenu extends DiscordMenu, BeanNameAware {
+non-sealed public interface DiscordEntityMenu extends DiscordMenu {
 
+	@Override
 	default EntitySelectMenu build() {
 		return build(null);
 	}

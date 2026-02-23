@@ -3,14 +3,13 @@ package lu.rescue_rush.spring.jda;
 import java.awt.Color;
 import java.time.Duration;
 import java.util.Collection;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.logging.Logger;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -18,7 +17,6 @@ import org.springframework.stereotype.Service;
 import jakarta.annotation.PreDestroy;
 import lu.rescue_rush.spring.jda.embed.DiscordButtonMessage;
 import lu.rescue_rush.spring.jda.embed.DiscordEmbed;
-import lu.rescue_rush.spring.jda.listener.SlashCommandListener;
 import lu.rescue_rush.spring.jda.message.DiscordMessage;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
@@ -30,7 +28,7 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 
 @Service
-@ComponentScan(basePackageClasses = SlashCommandListener.class)
+@ConditionalOnBean(JDA.class)
 public class DiscordSenderService {
 
 	private static final Logger LOGGER = Logger.getLogger(DiscordSenderService.class.getName());
@@ -87,9 +85,12 @@ public class DiscordSenderService {
 		las.forEach(jda::addEventListener);
 		final long endTime = System.nanoTime();
 
-		LOGGER
-				.info("Registered " + las.size() + " JDA listeners (" + ((endTime - startTime) / 1e9) + "s / "
-						+ ((endTime - startTime2) / 1e6) + "ms).");
+		LOGGER.info("Registered " + las.size() + " JDA listeners (" + ((endTime - startTime) / 1e9) + "s / "
+				+ ((endTime - startTime2) / 1e6) + "ms).");
+	}
+
+	public JDA getJda() {
+		return jda;
 	}
 
 	public Message send(MessageChannel channel, String message) {

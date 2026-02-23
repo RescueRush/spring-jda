@@ -44,28 +44,26 @@ public class SelectMenuListener extends ListenerAdapter {
 
 	@Override
 	public void onStringSelectInteraction(StringSelectInteractionEvent event) {
-		final String id = event.getComponentId().contains(":") ? event.getComponentId().split(":")[0] : event.getComponentId();
+		final String id = event.getComponentId().contains(":") ? event.getComponentId().split(":")[0]
+				: event.getComponentId();
 		if (listeners.containsKey(id)) {
 			try {
-				DiscordMenuExecutor listener = listeners.get(id);
+				final DiscordMenuExecutor listener = listeners.get(id);
 				if (!(listener instanceof DiscordStringMenuExecutor)) {
 					LOGGER.warning("Listener for '" + event.getComponentId() + "' isn't for String selection!");
-					event.getHook().sendMessage("Listener for '" + event.getComponentId() + "' isn't for String selection!");
+					event.getHook()
+							.sendMessage("Listener for '" + event.getComponentId() + "' isn't for String selection!");
 					return;
 				}
 
 				((DiscordStringMenuExecutor) listener).execute(event);
 			} catch (Exception e) {
-				final String msg = "A method executor (`" + event.getComponentId() + "`) raised an exception: " + e.getMessage() + " ("
-						+ e.getClass().getSimpleName() + ")";
-				event
-						.getHook()
-						.sendMessage(msg)
-						.queue(null,
-								(f) -> event
-										.getChannel()
-										.sendMessage(msg + "\n(failed once: " + f.getMessage() + " (" + f.getClass().getSimpleName() + "))")
-										.queue());
+				final String msg = "A method executor (`" + event.getComponentId() + "`) raised an exception: "
+						+ e.getMessage() + " (" + e.getClass().getSimpleName() + ")";
+				event.getHook().sendMessage(msg).queue(null,
+						(f) -> event.getChannel().sendMessage(
+								msg + "\n(failed once: " + f.getMessage() + " (" + f.getClass().getSimpleName() + "))")
+								.queue());
 
 				if (isDebug()) {
 					e.printStackTrace();
@@ -78,19 +76,21 @@ public class SelectMenuListener extends ListenerAdapter {
 
 	@Override
 	public void onEntitySelectInteraction(EntitySelectInteractionEvent event) {
-		final String id = event.getComponentId().contains(":") ? event.getComponentId().split(":")[0] : event.getComponentId();
+		final String id = event.getComponentId().contains(":") ? event.getComponentId().split(":")[0]
+				: event.getComponentId();
 		if (listeners.containsKey(id)) {
 			try {
 				final DiscordMenuExecutor listener = listeners.get(id);
 				if (!(listener instanceof DiscordEntityMenuExecutor)) {
 					LOGGER.warning("Listener for '" + event.getComponentId() + "' isn't for Entity selection!");
-					event.getHook().sendMessage("Listener for '" + event.getComponentId() + "' isn't for Entity selection!");
+					event.getHook()
+							.sendMessage("Listener for '" + event.getComponentId() + "' isn't for Entity selection!");
 					return;
 				}
 				((DiscordEntityMenuExecutor) listener).execute(event);
 			} catch (Exception e) {
-				final String msg = "A method executor (`" + event.getComponentId() + "`) raised an exception: " + e.getMessage() + " ("
-						+ e.getClass().getSimpleName() + ")";
+				final String msg = "A method executor (`" + event.getComponentId() + "`) raised an exception: "
+						+ e.getMessage() + " (" + e.getClass().getSimpleName() + ")";
 				event.getHook().sendMessage(msg).queue(null, (f) -> event.getChannel().sendMessage(msg).queue());
 
 				e.printStackTrace();
