@@ -59,16 +59,12 @@ public class SlashCommandListener extends ListenerAdapter {
 
 				listeners.get(event.getName()).execute(event);
 			} catch (Exception e) {
-				final String msg = "A method executor (`" + event.getName() + "`) raised an exception: " + e.getMessage() + " ("
-						+ e.getClass().getSimpleName() + ")";
-				event
-						.getChannel()
-						.sendMessage(msg)
-						.queue(null,
-								(f) -> event
-										.getChannel()
-										.sendMessage(msg + "\n(failed once: " + f.getMessage() + " (" + f.getClass().getSimpleName() + "))")
-										.queue());
+				final String msg = "A method executor (`" + event.getName() + "`) raised an exception: "
+						+ e.getMessage() + " (" + e.getClass().getSimpleName() + ")";
+				event.getChannel().sendMessage(msg).queue(null,
+						(f) -> event.getChannel().sendMessage(
+								msg + "\n(failed once: " + f.getMessage() + " (" + f.getClass().getSimpleName() + "))")
+								.queue());
 
 				if (DEBUG) {
 					e.printStackTrace();
@@ -88,45 +84,37 @@ public class SlashCommandListener extends ListenerAdapter {
 				try {
 					if (event.isAcknowledged()) {
 						if (isDebug()) {
-							LOGGER
-									.info("Auto-complete interaction already acknowledged for: " + event.getName() + " ("
-											+ event.getFocusedOption().getName() + ")");
+							LOGGER.info("Auto-complete interaction already acknowledged for: " + event.getName() + " ("
+									+ event.getFocusedOption().getName() + ")");
 						}
 						return;
 					}
 
 					autocompleteListener.complete(event);
 				} catch (Exception e) {
-					final String msg = "A method completer (`" + event.getName() + "`) raised an exception: " + e.getMessage() + " ("
-							+ e.getClass().getSimpleName() + ")";
-					event
-							.getChannel()
-							.sendMessage(msg)
-							.queue(null,
-									(f) -> event
-											.getChannel()
-											.sendMessage(
-													msg + "\n(failed once: " + f.getMessage() + " (" + f.getClass().getSimpleName() + "))")
-											.queue());
+					final String msg = "A method completer (`" + event.getName() + "`) raised an exception: "
+							+ e.getMessage() + " (" + e.getClass().getSimpleName() + ")";
+					event.getChannel().sendMessage(msg).queue(null, (f) -> event.getChannel().sendMessage(
+							msg + "\n(failed once: " + f.getMessage() + " (" + f.getClass().getSimpleName() + "))")
+							.queue());
 
 					if (isDebug()) {
 						e.printStackTrace();
 					}
 				}
 			} else {
-				LOGGER
-						.warning("No slash command autocomplete registered for: " + event.getName() + " ("
-								+ event.getFocusedOption().getName() + ")");
+				LOGGER.warning("No slash command autocomplete registered for: " + event.getName() + " ("
+						+ event.getFocusedOption().getName() + ")");
 			}
 		} else {
-			LOGGER.warning("No slash command registered for: " + event.getName() + " (" + event.getFocusedOption().getName() + ")");
+			LOGGER.warning("No slash command registered for: " + event.getName() + " ("
+					+ event.getFocusedOption().getName() + ")");
 		}
 	}
 
 	public void registerCommand(String name, SlashCommandExecutor command) {
-		jda
-				.upsertCommand(command.build(name))
-				.queue((c) -> LOGGER.info("Registered slash command: " + name + " (" + command.description() + ")"), (e) -> {
+		jda.upsertCommand(command.build(name)).queue(
+				(c) -> LOGGER.info("Registered slash command: " + name + " (" + command.description() + ")"), (e) -> {
 					if (e instanceof CancellationException) {
 						return; // ignore
 					}
