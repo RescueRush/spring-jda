@@ -8,7 +8,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.logging.Logger;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.event.EventListener;
@@ -30,7 +29,7 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 
 @Service
-@ConditionalOnBean(JDA.class)
+//@ConditionalOnBean(JDA.class)
 public class DiscordSenderService {
 
 	private static final Logger LOGGER = Logger.getLogger(DiscordSenderService.class.getName());
