@@ -1,6 +1,6 @@
 package lu.rescue_rush.spring.jda.embed;
 
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import net.dv8tion.jda.api.components.buttons.Button;
 
 public interface DiscordButtonMessage {
 

@@ -3,6 +3,7 @@ package lu.rescue_rush.spring.jda;
 import java.awt.Color;
 import java.time.Duration;
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.logging.Logger;
 
@@ -20,6 +21,7 @@ import lu.rescue_rush.spring.jda.embed.DiscordEmbed;
 import lu.rescue_rush.spring.jda.message.DiscordMessage;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.MessageEmbed.Field;
@@ -112,7 +114,8 @@ public class DiscordSenderService {
 		try {
 			awaitJDAReady();
 			if (embed instanceof DiscordButtonMessage buttons) {
-				return channel.sendMessageEmbeds(embed.build()).setActionRow(buttons.buttons()).complete();
+				return channel.sendMessageEmbeds(embed.build()).addComponents(ActionRow.of(List.of(buttons.buttons())))
+						.complete();
 			} else {
 				return channel.sendMessageEmbeds(embed.build()).complete();
 			}
@@ -125,7 +128,8 @@ public class DiscordSenderService {
 		try {
 			awaitJDAReady();
 			if (message instanceof DiscordButtonMessage buttons) {
-				return channel.sendMessage(message.body()).setActionRow(buttons.buttons()).complete();
+				return channel.sendMessage(message.body()).addComponents(ActionRow.of(List.of(buttons.buttons())))
+						.complete();
 			} else {
 				return channel.sendMessage(message.body()).complete();
 			}

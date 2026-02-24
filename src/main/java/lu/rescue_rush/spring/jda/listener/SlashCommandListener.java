@@ -1,5 +1,6 @@
 package lu.rescue_rush.spring.jda.listener;
 
+import java.sql.SQLSyntaxErrorException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CancellationException;
@@ -40,7 +41,7 @@ public class SlashCommandListener extends ListenerAdapter {
 	private final Map<String, SlashCommandExecutor> listeners;
 	private final Map<String, Map<String, SubSlashCommandExecutor>> subListeners;
 
-	public SlashCommandListener(Map<String, SlashCommandExecutor> listeners) {
+	public SlashCommandListener(final Map<String, SlashCommandExecutor> listeners) {
 		this.listeners = new HashMap<>();
 		this.subListeners = new HashMap<>();
 
@@ -50,18 +51,15 @@ public class SlashCommandListener extends ListenerAdapter {
 			}
 		});
 		listeners.forEach((name, executor) -> {
-			if (executor instanceof SubSlashCommandExecutor sub) {
+			if (executor instanceof final SubSlashCommandExecutor sub) {
 				final Class<? extends SlashCommandExecutor> parentClass = sub.getCommandClass();
 
-				final String parentName = listeners
-						.entrySet()
-						.stream()
-						.filter(e -> e.getValue().getClass().equals(parentClass))
-						.map(Map.Entry::getKey)
-						.findFirst()
-						.orElseThrow(() -> new IllegalStateException("Parent command not found for sub command: " + name));
+				final String parentName = listeners.entrySet().stream()
+						.filter(e -> e.getValue().getClass().equals(parentClass)).map(Map.Entry::getKey).findFirst()
+						.orElseThrow(
+								() -> new IllegalStateException("Parent command not found for sub command: " + name));
 
-				subListeners.computeIfAbsent(parentName, k -> new HashMap<>()).put(name, sub);
+				this.subListeners.computeIfAbsent(parentName, k -> new HashMap<>()).put(name, sub);
 			}
 		});
 	}
@@ -69,17 +67,17 @@ public class SlashCommandListener extends ListenerAdapter {
 	@Async
 	@EventListener(ApplicationReadyEvent.class)
 	public void init() {
-		discordSenderService.awaitJDAReady();
+		this.discordSenderService.awaitJDAReady();
 
-		listeners.entrySet().forEach(e -> registerCommand(e.getKey(), e.getValue()));
+		this.listeners.entrySet().forEach(e -> this.registerCommand(e.getKey(), e.getValue()));
 	}
 
 	@Override
-	public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
+	public void onSlashCommandInteraction(final SlashCommandInteractionEvent event) {
 
-		String commandName = event.getName();
+		final String commandName = event.getName();
 
-		if (!listeners.containsKey(commandName)) {
+		if (!this.listeners.containsKey(commandName)) {
 			LOGGER.warning("No slash command registered for: " + commandName);
 			return;
 		}
@@ -94,8 +92,8 @@ public class SlashCommandListener extends ListenerAdapter {
 
 			final String subName = event.getSubcommandName();
 
-			if (subName != null && subListeners.containsKey(commandName)) {
-				final Map<String, SubSlashCommandExecutor> subs = subListeners.get(commandName);
+			if (subName != null && this.subListeners.containsKey(commandName)) {
+				final Map<String, SubSlashCommandExecutor> subs = this.subListeners.get(commandName);
 
 				if (subs.containsKey(subName)) {
 					subs.get(subName).execute(event);
@@ -107,20 +105,16 @@ public class SlashCommandListener extends ListenerAdapter {
 			}
 
 			// normal command
-			listeners.get(commandName).execute(event);
+			this.listeners.get(commandName).execute(event);
 
-		} catch (Exception e) {
+		} catch (final Exception e) {
 			final String msg = "A method executor (`" + commandName + "`) raised an exception: " + e.getMessage() + " ("
 					+ e.getClass().getSimpleName() + ")";
 
-			event
-					.getChannel()
-					.sendMessage(msg)
-					.queue(null,
-							(f) -> event
-									.getChannel()
-									.sendMessage(msg + "\n(failed once: " + f.getMessage() + " (" + f.getClass().getSimpleName() + "))")
-									.queue());
+			event.getChannel().sendMessage(msg).queue(null,
+					(f) -> event.getChannel().sendMessage(
+							msg + "\n(failed once: " + f.getMessage() + " (" + f.getClass().getSimpleName() + "))")
+							.queue());
 
 			if (DEBUG) {
 				e.printStackTrace();
@@ -129,55 +123,52 @@ public class SlashCommandListener extends ListenerAdapter {
 	}
 
 	@Override
-	public void onCommandAutoCompleteInteraction(CommandAutoCompleteInteractionEvent event) {
+	public void onCommandAutoCompleteInteraction(final CommandAutoCompleteInteractionEvent event) {
 
-		String commandName = event.getName();
+		final String commandName = event.getName();
 
-		if (!listeners.containsKey(commandName)) {
+		if (!this.listeners.containsKey(commandName)) {
 			LOGGER.warning("No slash command registered for: " + commandName);
 			return;
 		}
 
-		String subName = event.getSubcommandName();
+		final String subName = event.getSubcommandName();
 
-		if (subName != null && subListeners.containsKey(commandName)) {
-			SubSlashCommandExecutor sub = subListeners.get(commandName).get(subName);
+		if (subName != null && this.subListeners.containsKey(commandName)) {
+			final SubSlashCommandExecutor sub = this.subListeners.get(commandName).get(subName);
 
-			if (sub instanceof SlashCommandAutocomplete autocomplete) {
+			if (sub instanceof final SlashCommandAutocomplete autocomplete) {
 				autocomplete.complete(event);
 				return;
 			}
 		}
 
-		SlashCommandExecutor root = listeners.get(commandName);
+		final SlashCommandExecutor root = this.listeners.get(commandName);
 
-		if (root instanceof SlashCommandAutocomplete autocomplete) {
+		if (root instanceof final SlashCommandAutocomplete autocomplete) {
 			autocomplete.complete(event);
 		}
 	}
 
-	public void registerCommand(String name, SlashCommandExecutor command) {
+	public void registerCommand(final String name, final SlashCommandExecutor command) {
 		final SlashCommandData data = command.build(name);
 
-		if (subListeners.containsKey(name)) {
-			subListeners.get(name).forEach((subName, subExecutor) -> {
-				data.addSubcommands(new SubcommandData(subName, subExecutor.description()).addOptions(subExecutor.options()));
+		if (this.subListeners.containsKey(name)) {
+			this.subListeners.get(name).forEach((subName, subExecutor) -> {
+				data.addSubcommands(
+						new SubcommandData(subName, subExecutor.description()).addOptions(subExecutor.options()));
 			});
 		}
 
-		jda
-				.upsertCommand(data)
-				.queue((c) -> LOGGER
-						.info("Registered slash command: " + name
-								+ (data.getSubcommands().size() > 0
-										? " " + data.getSubcommands().stream().map(d -> d.getName()).collect(Collectors.joining(", "))
-										: "")
-								+ " (" + command.description() + ")"),
-						(e) -> {
-							if (!(e instanceof CancellationException) && isDebug()) {
-								e.printStackTrace();
-							}
-						});
+		this.jda.upsertCommand(data).queue((c) -> LOGGER.info("Registered slash command: " + name
+				+ (data.getSubcommands().size() > 0
+						? " " + data.getSubcommands().stream().map(d -> d.getName()).collect(Collectors.joining(", "))
+						: "")
+				+ " (" + command.description() + ")"), (e) -> {
+					if (!(e instanceof CancellationException) && isDebug()) {
+						e.printStackTrace();
+					}
+				});
 	}
 
 	public static boolean isDebug() {
