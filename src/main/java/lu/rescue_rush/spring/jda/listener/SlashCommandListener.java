@@ -1,6 +1,5 @@
 package lu.rescue_rush.spring.jda.listener;
 
-import java.sql.SQLSyntaxErrorException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CancellationException;
@@ -8,6 +7,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
@@ -25,6 +25,7 @@ import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 
 @Component
+@ConditionalOnBean(DiscordSenderService.class)
 public class SlashCommandListener extends ListenerAdapter {
 
 	private static final Logger LOGGER = Logger.getLogger(SlashCommandListener.class.getName());

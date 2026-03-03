@@ -5,6 +5,7 @@ import java.util.concurrent.CancellationException;
 import java.util.logging.Logger;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
@@ -17,6 +18,7 @@ import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionE
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
 @Component
+@ConditionalOnBean(DiscordSenderService.class)
 public class MessageCommandListener extends ListenerAdapter {
 
 	private static final Logger LOGGER = Logger.getLogger(MessageCommandListener.class.getName());
