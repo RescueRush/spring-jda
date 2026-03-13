@@ -20,7 +20,7 @@
 		<spring-boot.version>3.5.4</spring-boot.version>
 		<jda.version>6.3.1</jda.version>
 		<jakarta.version>2.1.1</jakarta.version>
-		<pclib.version>1.0.0</pclib.version>
+		<pclib.version>1.0.2-SNAPSHOT</pclib.version>
 	</properties>
 
 	<contributors>
@@ -63,6 +63,18 @@
 		</repository>
 	</repositories>
 
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>lu.kbra</groupId>
+				<artifactId>pclib</artifactId>
+				<version>${pclib.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework</groupId>
@@ -101,7 +113,6 @@
 		<dependency>
 			<groupId>lu.kbra</groupId>
 			<artifactId>pclib-json</artifactId>
-			<version>${pclib.version}</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
